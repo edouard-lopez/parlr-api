@@ -1,0 +1,358 @@
+FORMAT: 1A
+HOST: http://api.cfdict.fr
+
+# Parlr API
+Parlr API is _database of rare languages-to-French dictionaries_ to help teach and learn rares and distants languages.
+
+# Parlr API Root [/]
+Parlr API entry point.
+
+This resource does not have any attributes. 
+Instead it offers the initial API affordances in the form of the HTTP Link header and HAL links.
+
+## Retrieve Entry Point [GET]
+
++ Response 200 (application/hal+json)
+    + Headers
+
+            Link: <http:/api.cfdict.fr/>;rel="self",<http:/api.cfdict.fr/dicts>;rel="dicts",<http:/api.cfdict.fr/users>;rel="users"
+
+    + Body
+
+            {
+                "_links": {
+                    "self": { "href": "/" },
+                    "dicts": { "href": "/dicts/{language_code}", "templated": true }
+                    "users": { "href": "/users" },
+                }
+            }
+
+# Group Dictionary
+Dictionariy-related resources of *Parlr API*.
+
+## Dictionaries Collection [/dicts]
+### List all Dictionaries [GET]
++ Response 200 (application/hal+json)
+
+    + Headers
+
+            Link: <http:/api.cfdict.fr/dicts>;rel="self"
+
+    + Body
+    
+            {
+                "_links": {
+                    "self": { "href": "/dicts" }
+                },
+                "_embedded": {
+                    "dicts": [
+                        {
+                            "_links": {
+                                "self": "/dicts/cmn"
+                            },
+                            "id": "cmn",
+                            "name": "cfdict",
+                            "desc": "Chinese-French Dictionary"
+                            "stats": {
+                                "total": 4704
+                            }
+                        },
+                        {
+                            "_links": {
+                                "self": "/dicts/jpn"
+                            },
+                            "id": "jpn",
+                            "name": "jfdict",
+                            "desc": "Japanese-French Dictionary"
+                            "stats": {
+                                "total": 0
+                            }
+                        }
+                    ]
+                }
+            }
+
+
+## Dictionary [/dicts/{language_code}]
+A single Dictionary object. It represents `language_code` _-to-french dictionary_ (_e.g._ Chinese-French dictionary) resource. 
+
+The Dictionary resource has the following attributes:
+
+- `id`: language as an [ISO 15924](https://en.wikipedia.org/wiki/ISO_15924) code (_e.g._ `cmn`, `jpn`, etc.) ;
+- `name`: human-readable dictionary's name ;
+- `desc`: short description for the public ;
+- `stats.total`: entry count in the dictionary ;
+- `stats.last`: last entry added to the dictionary ;
+- `schema`: list of fields exhibited by _dictionary's entry resource_ in the current dictionary. Each item is an object of the following format:
+        + `name` (required, string, `eid`): field name ;
+        + `aliases` (optional, array, `["hans","simp"]`): field's aliases.
+        + `desc` (optional, string): human-readable field's description.
+
++ Parameters
+    + language_code (required, string, `cmn`) ... language name as an [ISO 15924](https://en.wikipedia.org/wiki/ISO_15924) code.
+
++ Model (application/hal+json)
+
+    HAL+JSON representation of Dictionary Resource. 
+    In addition to representing its state in the JSON form it offers affordances in the form of the HTTP Link header and HAL links.
+
+    + Headers
+
+            Link: <http:/api.cfdict.fr/dicts/cmn>;rel="self",<http:/api.cfdict.fr/dicts/cmn212176>;rel="last"
+
+    + Body
+
+            {
+                "_links": {
+                    "self": { "href": "/dicts/cmn" },
+                    "last": { "href": "/dicts/cmn/212176" },
+                },
+                "id": "cmn",
+                "name": "cfdict",
+                "desc": "Chinese-French Dictionary"
+                "stats": {
+                    "total": 4704,
+                    "last": 212176
+                }
+                "schema": [
+                    { "name": "eid" }
+                    { "name": "ort", "aliases": [ "hans" ] },
+                    { "name": "ortx1", "aliases": [ "hant" ] },
+                    { "name": "pho", "aliases": [ "pin" ] },
+                    { "name": "tid" },
+                    { "name": "def" },
+                    { "name": "pid" },
+                    { "name": "pos" },
+                    { "name": "pos_txt" },
+                    { "name": "rank" },
+                    { "name": "score" }
+                ]
+            }
+
+### Retrieve a Dictionary [GET]
++ Response 200 (application/hal+json)
+
+    [Dictionary][]
+
+
+## Dictionary's Entry [/dicts/{language_code}/{eid}]
+A dictionary's entry resource for the given `language_code` dictionary.
+
+An entry resource **follows _dictionary's schema_** as describe in the _dictionary resource_. It exhibits at least the following attributes:
+
+- `eid`: system-generated entry's id ; can be used to get/update/delete ;
+        - `ort`: simplified chinese (`hans`) ;
+        - `ortx1`: traditional chinese (`hant`) ;
+        - `pho`: phonetic (Hanyu Pinyin) ;
+- `tid`: translation id ;
+        - `def`: French translation ;
+- `pid`: part of speech id ;
+        - `pos`: abbreviation for part of speech ;
+        - `pos_text`: text for part of speech ;
+- `rank`: item frequency rank in SUBTLEX. Value is an a positive integer ;
+        - `score`: It is the item frequency rank relative to whole database (superset of _SUBTLEX_). 
+Value in `0..1` interval. Can be a more complex value if we **take user profile into account**.
+
++ Parameters
+    + language_code (required, string, `cmn`) ... language code as an [ISO 15924](https://en.wikipedia.org/wiki/ISO_15924) code.
+    + eid (required, number) ... entry id.
+    
++ Model (application/hal+json)
+
+    + Headers
+
+            Link: <http:/api.cfdict.fr/dicts/cmn>;rel="dict",<http:/api.cfdict.fr/dicts/cmn>;rel="dict",<http:/api.cfdict.fr/dicts/cmn/4>;rel="self",<http:/api.cfdict.fr/dicts/cmn/def/dix+mille>;rel="def",<http:/api.cfdict.fr/dicts/cmn/ort/万>;rel="ort",<http:/api.cfdict.fr/dicts/cmn/ortx1/萬>;rel="ortx1",<http:/api.cfdict.fr/dicts/cmn/pho/wan4>;rel="pho",<http:/api.cfdict.fr/dicts/cmn/pos/num>;rel="pos"
+
+    + Body
+
+            {
+                "_links": {
+                    "dict": { "href": "/dicts/cmn" },
+                    
+                    "self": { "href": "/dicts/cmn/4" },
+                        "def": { "href": "/dicts/cmn/def/dix mille" },
+                        "ort": { "href": "/dicts/cmn/ort/万" },
+                        "ortx1": { "href": "/dicts/cmn/ortx1/萬" },
+                        "pho": { "href": "/dicts/cmn/pho/wan4" },
+                        "pos": { "href": "/dicts/cmn/pos/num" },
+                },
+                "eid": 4,
+                    "ort": "万",
+                    "ortx1": "萬",
+                    "pho": "wan4", 
+                "tid": 4
+                    "def": "dix mille",
+                "pid": 1,
+                    "pos": "num",
+                    "pos_txt": "",
+                "rank": 557,
+                "score": 0.994381       
+            }
+            
+### Retrieve an entry [GET]
++ Response 200 (application/hal+json)
+
+    [Dictionary's Entry][]
+
+### Create an entry [POST]
++ Request (application/json)
+
+        { "title": "Buy cheese and bread for breakfast." }
+
++ Response 201 (application/json)
+
+    [Dictionary's Entry][]
+
+### Update an entry [PUT]
++ Response 204
+
+### Remove an entry [DELETE]
++ Response 204
+
+
+## Dictionary's Search [/dicts/{language_code}/search/{text}{?f=fields_list}]
+Search in `language_code` dictionary (cf. [ISO 15924](https://en.wikipedia.org/wiki/ISO_15924) code) for `text` in `fields_list`.
+    
+Standard fields are:
+
+* `ort`: main orthography ( _e.g._ Simplified Chinese) ;
+* `ortx1`: first extra orthography ( _e.g._ Traditional Chinese) ;
+* `pho`: phonetic transcription ( _e.g._ Hanyu Pinyin) ;
+* `def`: French translation.
+
+Every language may expose language-specific fields as well as aliases to the standard fields. For instance, in Chinese:
+
+* `ort` aliases to `hans` (Simplified Chinese) ;
+* `ortx1` aliases to `hant` (Traditional Chinese) ;
+* `pho` aliases to `pin` (Hanyu Pinyin) ;
+* `def` aliases to `l10n` (Tranlation/localization).
+
++ Parameters
+    + language_code (required, string, `cmn`) ... language name as an [ISO 15924](https://en.wikipedia.org/wiki/ISO_15924) code.
+    + text (required, string, `火,火山,火车`) ... `text` to search for. Can be a single value or a list of values separated by comma.
+    + fields_list = `any` (optional, string, `ort,pho,def`) ... comma-separated list of fields. Only search into those fields.
+
+### List all entries matching search [GET]
+
++ Response 200 (application/hal+json)
+
+        [Dictionary's Entry][]
+
+
+# Group Users
+Users-related resources of *Parlr API*.
+
+## User [/users/{uid}]
+
+User can study several languages.
+
+The User resource has the following attributes:
+
+- `uid`: user id
+- `name`: human-readable dictionary's name
+- `username`: machine readable name
+- `learn`: list of language as an [ISO 15924](https://en.wikipedia.org/wiki/ISO_15924) code studied by the user
+
++ Parameters
+    + uid (required, string) ... user id
+
++ Model (application/hal+json)
+
+    HAL+JSON representation of Dictionary Resource. 
+    In addition to representing its state in the JSON form it offers affordances in the form of the HTTP Link header and HAL links.
+
+    + Headers
+
+            Link: <http:/api.cfdict.fr/dicts/cmn>;rel="self",<http:/api.cfdict.fr/dicts/cmn212176>;rel="last"
+
+    + Body
+
+            {
+                "_links": {
+                    "self": { "href": "/dicts/cmn" },
+                    "last": { "href": "/dicts/cmn/212176" },
+                },
+                "id": "cmn",
+                "name": "cfdict",
+                "desc": "Chinese-French Dictionary"
+                "stats": {
+                    "total": 4704,
+                    "last": 212176
+                }
+            }
+
+### Retrieve a User [GET]
++ Response 200 (application/hal+json)
+
+    [User][]
+
+### Create a User [POST]
++ Response 200 (application/hal+json)
+
+    [User][]
+
+### Update a User [PUT]
++ Response 200 (application/hal+json)
+
+    [User][]
+
+### Remove a User [DELETE]
++ Response 200 (application/hal+json)
+
+    [User][]
+
+
+## User's Known Entries [/users/{uid}/knows]
+
++ Parameters
+    + uid (required, string) ... user id
+
+### List user's known entries [GET]
++ Response 200 (application/hal+json)
+
+    + Headers
+
+            Link: <http:/api.cfdict.fr/users/1/knows>;rel="self"
+
+    + Body
+    
+            {
+                "_links": {
+                    "self": { "href": "/users" }
+                },
+                "_embedded": {
+                    "users": [
+                        {
+                            "_links": {
+                                "self": "/users/1",
+                            },
+                            "id": 1,
+                            "username": "ed8",
+                            "learn": [
+                                "cmn", "jpn"
+                            ]
+                        },
+                        {
+                            "_links": {
+                                "self": "/users/2",
+                            },
+                            "id": "2",
+                            "username": "yug"
+                            "learn": [
+                                "cmn"
+                            ]
+                        }
+                    ]
+                }
+            }
+            
+## User's Search [/users/search/{user}]
+Search for `user`.
+
++ Parameters
+    + user (required, string) ... complete or partial username
+
+### List all Users [GET]
++ Response 200 (application/hal+json)
+
+   [User][]
